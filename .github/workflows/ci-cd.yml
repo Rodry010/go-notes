@@ -1,0 +1,38 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  #CI (Integração Contínua)
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout do Código
+      uses: actions/checkout@v3
+
+    - name: Configurar Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+
+    - name: Compilar Aplicação (Build)
+      run: go build -v ./...
+
+    - name: Executar Testes (Test)
+      run: go test -v ./...
+
+  #CD (Deployment Contínuo)
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Deploy via SSH
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.VM_HOST }}      
+        username: ${{ secrets.VM_USER }}
+        key: ${{ secrets.SSH_KEY }}
+        script: /home/appuser/deploy.sh
+      continue-on-error: true  
